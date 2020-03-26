@@ -1,0 +1,110 @@
+div{
+  box-sizing: border-box;
+}
+image{
+    width: 100%;
+    display: block;
+}
+.flex-center{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* header */
+.header{
+    padding: 8px 20px;
+    background: #fff;
+    border-top: 1px solid #eee;
+  }
+  .header-left{
+    width: 22px;
+  }
+  .header-right{
+    width: 26px;
+  }
+  .header-search{
+    width: calc(100% - 70px);
+    display: flex;
+    align-items: center;
+    background: rgb(245, 246, 248);
+    height: 34px;
+    border-radius: 26px;
+    padding: 8px 16px;
+    box-sizing: border-box;
+  }
+  .search{
+    width: 16px;
+    margin-top: 4px;
+    margin-right: 10px;
+  }
+  .phcolor{
+   color: #c5c6c8;
+  }
+  .text-center{
+    text-align: center;
+  }
+  /* /header */
+
+  .prow{
+    padding: 0 12px;
+  }
+  .mt10{
+    margin-top: 10px;
+  }
+  .mt20{
+    margin-top: 20px;
+  }
+  .mt50{
+    margin-top: 50px;
+  }
+
+  .phcolor{
+    color: #bbb;
+  }
+  /* 授权弹出框 */
+.modal2{
+  width: 270px;
+  text-align: center;
+}
+.popup-class{
+  border-radius: 10px;
+}
+.reg-title{
+font-size: 15px;
+color: #333;
+padding-top: 30px;
+font-weight: bold;
+}
+.reg-text{
+color: #999;
+font-size: 12px;
+padding: 10px 30px 20px 30px;
+}
+.modal-btns{
+display: flex;
+border-top: 1px solid #cecece;
+}
+.modal-cancel-btn{
+color: #999;
+height: 40px;
+width: 50%;
+line-height: 40px;
+text-align: center;
+border-right: 1px solid #d8d8d8;
+
+}
+button::after {
+border: none;
+}
+.reg-btn{
+background: #fff;
+font-size: 16px;
+color: #FFD637;
+height: 40px;
+width: 50%;
+line-height: 40px;
+text-align: center;
+}
+
+/* 授权弹出框END */

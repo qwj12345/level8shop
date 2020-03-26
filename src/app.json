@@ -1,0 +1,62 @@
+{
+  "pages": [
+    "pages/index/main",
+    "pages/products/main",
+    "pages/discover/main",
+    "pages/user/main",
+    "pages/userInfo/main",
+    "pages/productDetail/main",
+    "pages/recommend/main",
+    "pages/placeOrder/main",
+    "pages/getOrder/main",
+    "pages/rate/main",
+    "pages/address/main",
+    "pages/selCoupon/main",
+    "pages/newAddress/main",
+    "pages/cart/main",
+    "pages/coupon/main",
+    "pages/logistics/main",
+    "pages/orders/main"
+   ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#fff",
+    "navigationBarTitleText": "LEVEL8 官方商城",
+    "navigationBarTextStyle": "black"
+  },
+  "tabBar": {
+    "color": "#595959",
+    "backgroundColor": "#ffffff",
+    "selectedColor": "#000000",
+    "borderStyle": "white",
+    "list": [
+      {
+      "text": "首页",
+      "pagePath": "pages/index/main",
+      "iconPath":"./static/images/tabbar_1_1.png",
+      "selectedIconPath":"./static/images/tabbar_1_2.png"
+    }, 
+    {
+      "text": "商品分类",
+      "pagePath": "pages/products/main",
+      "iconPath":"./static/images/tabbar_2_1.png",
+      "selectedIconPath":"./static/images/tabbar_2_2.png"
+    }, 
+     {
+      "text": "发现",
+      "pagePath": "pages/discover/main",
+      "iconPath":"./static/images/tabbar_3_1.png",
+      "selectedIconPath":"./static/images/tabbar_3_2.png"
+    },
+    {
+      "text": "会员",
+      "pagePath": "pages/user/main",
+      "iconPath":"./static/images/tabbar_4_1.png",
+      "selectedIconPath":"./static/images/tabbar_4_2.png"
+    }
+  ]
+  },
+  "navigateToMiniProgramAppIdList":[
+    "wxb4aa148ab9b37bc5"
+  ]
+}
