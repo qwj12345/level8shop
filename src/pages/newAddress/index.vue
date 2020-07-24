@@ -32,7 +32,7 @@
               <!--  -->
         <div class="address-btns">
             <div class="address-btn add-btn" @click="addAddress">保存并使用</div>
-            <div class="address-btn report-btn">一键导入微信地址</div>
+            <div class="address-btn report-btn"  @click="chooseAddress">一键导入微信地址</div>
         </div>
               <!--  -->
       <van-popup :show="showArea" position="bottom" close-on-click-overlay="true" @close="closeArea" >
@@ -56,7 +56,8 @@ export default {
             area:'',
             areaId:'',
             editType:0,
-            id:0
+            id:0,
+            districtName:''
         }
     },
     methods: {
@@ -72,7 +73,22 @@ export default {
             this.areaId = e.mp.detail.values[2].code;
             this.area = e.mp.detail.values[0].name + ' ' + e.mp.detail.values[1].name + ' ' + e.mp.detail.values[2].name;
             this.showArea = false;
+        },
+        chooseAddress(){
+            let that = this;
+            wx.chooseAddress({
+                success (res) {
+                    console.log(res.countyName)
+                    that.name = res.userName;
+                    that.tel = res.telNumber;
+                    that.area = res.provinceName +' '+ res.cityName + ' '+ res.countyName;
+                    that.address = res.detailInfo;
+                    that.areaId = '';
+                    that.districtName = res.countyName;
+                    console.log(res)
 
+                }
+            })
         },
         onChange(e){
             console.log(e)
@@ -98,6 +114,7 @@ export default {
                         address:this.address,
                         userPhone:this.tel,
                         userName:this.name,
+                        districtName:this.districtName,
                         isDefault
                     }
                     console.log(data)
@@ -130,6 +147,7 @@ export default {
                         address:this.address,
                         userPhone:this.tel,
                         userName:this.name,
+                        districtName:this.districtName,
                         isDefault
                     }
                     console.log(data)

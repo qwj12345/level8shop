@@ -39,7 +39,6 @@
         <!-- <button class="modal-btn" open-type="getUserInfo" @getuserinfo="getUserInfo">微信手机号快速登录</button> -->
         <button class="modal-btn2" @click="refuseLog">暂不授权>></button>
       </div>
-
     </div>
   </div>
 </template>
@@ -77,9 +76,6 @@ export default {
           success (res) {
 
             if (res.code) {
-              console.log(e.mp.detail.encryptedData)
-              console.log(e.mp.detail.iv)
-              console.log(res.code)
               wx.request({
                 url: global.ip1+'miniProgram/api/shop/user/login', //
                 data: {
@@ -106,6 +102,8 @@ export default {
                       console.log(e)
                         getToken(e.encryptedData,e.iv).then(res => {
                           that.$emit('modalShow', {showModal:that.showModal});
+                          // 存储头像和姓名
+                          saveUser(e.userInfo.nickName,e.userInfo.avatarUrl,e.userInfo.gender);
                         });
                       }
                     })
@@ -138,14 +136,14 @@ export default {
       this.seliIcon2 === false ? this.seliIcon2 = true : this.seliIcon2 = false;
     },
     goConceal(){
-      wx.navigateTo({
-        url:'/pages/conceal/main'
-      })
+      // wx.navigateTo({
+      //   url:'/pages/conceal/main'
+      // })
     },
     goVIPRule(){
-      wx.navigateTo({
-        url:'/pages/viprule/main'
-      })
+      // wx.navigateTo({
+      //   url:'/pages/viprule/main'
+      // })
     }
   },
 }

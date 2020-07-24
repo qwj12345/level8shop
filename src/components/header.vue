@@ -15,7 +15,7 @@
       </div>
       <div class="header-right" @click="goCart">
         <img src="../../static/images/header_cart.png" mode="widthFix"/>
-        <div>{{cartNum}}</div>
+        <div v-if="cartNum!==0">{{cartNum}}</div>
       </div>
       <!--  -->
       <div class="filter-modal" :class="{'filter-height':openFilter&&isProducts}">
@@ -24,6 +24,12 @@
       </div>
       <!--  -->
       <div :class="{'height100':open}" class="header-modal">
+        <div class="model-item" :key="key" @click="getType(0)">
+          <div class="item-row" >
+            <div>所有</div>
+            <div style="width:16px" ><img src="../../static/images/face-right.png" mode='widthFix'/></div>
+          </div>
+        </div>
         <div class="model-item" v-for="(item,key) in items" :key="key" @click="openItem(item)">
           <div class="item-row" >
             <div>{{item.name}}</div>
@@ -39,16 +45,19 @@
           </div>
         </div>
       </div>
-    </div>
 
-  
+
+    </div>
 </template>
 
 <script>
 import {wxRequest} from '@/components/common'
+
 export default {
     data(){
         return{
+          showModal2:false,
+          showModal:false,
           filter:'最新上新',
           openFilter:false,
           open:false,
@@ -56,13 +65,10 @@ export default {
           filters:[{name:'销量优先',sel:false},{name:'最新上新',sel:true},{name:'价格从低到高',sel:false},{name:'价格从高到低',sel:false}]
         }
     },
-    props: ['isProducts','cartNum'],
+    props: ['isProducts','cartNum','hasAgree'],
     methods: {
       openItem(item){
- 
         item.open === false ? item.open = true : item.open = false;
-        console.log(2,this.items)
-
       },
       openMenu(){
         this.openFilter = false;
@@ -89,15 +95,28 @@ export default {
       },
       getType(e){
         this.open = false;
-        this.$emit('getType', e.id);
+        if(e===0){
+          this.$emit('getType', 0);
+        }else{
+          this.$emit('getType', e.id);
+        }
       },
       showSearch(){
         this.isProducts = false;
       },
       goCart(){
-        wx.navigateTo({
-          url:'/pages/cart/main'
-        })
+        if(this.hasAgree === true){   //先判断有没有授权
+          if(getApp().globalData.phone === 1){ //再判断有没有绑定手机
+            wx.navigateTo({
+              url:'/pages/cart/main'
+            })
+          }else{
+              this.showModal = true;
+              this.$emit('getModal', true);
+            }
+            }else{
+               this.$emit('getModal2', true);
+          }
       },
       searchProduct(e){
         this.$emit('getGoods', e.mp.detail);
@@ -105,14 +124,28 @@ export default {
     },
     mounted() {
       let that = this;
+      if(getApp().globalData.login === 1){
+          this.hasAgree = true;
+        }
+         // 因为如果只在APP.vue中请求一次的话会出现异步的问题，就是这个onLoad比APP.vue中的onLoad先执行完
+        wx.getUserInfo({
+          success: function(res) {
+              getApp().globalData.login = 1
+              that.hasAgree = true;
+          },
+          fail(err){
+              that.hasAgree = false;
+          }
+        })
+  
       wxRequest('/mp/shop/api/product/category',{data:{}}).then(res => {
-        console.log(res)
+
         res.data.data.forEach(item => {
           item.open = false;
         })
         that.items = res.data.data;
       })
-
+      
     },
 }
 </script>

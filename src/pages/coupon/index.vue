@@ -1,7 +1,7 @@
 <template>
   <div>
-    <van-tabs swipeable color='#FFD636' ab-active-class='my-tab' @change="changeTab">
-        <van-tab title="全部（2）" title-style='color:#ffd636'></van-tab>
+    <van-tabs   v-show="list.length!==0" swipeable color='#FFD636' ab-active-class='my-tab' @change="changeTab">
+        <van-tab :title="allNum" title-style='color:#ffd636'></van-tab>
         <van-tab :title="enableNum"></van-tab>
         <van-tab :title="noenableNum"></van-tab>
     </van-tabs>
@@ -26,27 +26,15 @@
                 <div class="cricle2">
                 </div>
             </div>
-        <!-- <div class="coupon" v-for="(item,key) in showList" :key='key'>
-            <div :class="{'coupon-left over-color':item.over,'coupon-left':!item.over}"><span style="font-size:12px;margin-top:-12px">￥</span><span style="font-size:32px;font-weight:bold">{{item.price}}</span></div>
-            <div class="coupon-right">
-                <div class="coupon-right-left">
-                    <div style="font-size:14px;margin-bottom:4px;font-weight:bold" :class="{'over-color':item.over}">{{item.name}}</div>
-                    <div class="coupon-rule-item" v-for="(rule,index) in item.rules" :key="index">
-                        <div class="coupon-cricle"></div>
-                        <div>{{rule}}</div>
-                    </div>
+             <!-- -->
 
-                    <div style="color:#bbb;font-size:10px;margin-top:10px;letter-spacing:0.5px;white-space: nowrap; overflow: hidden;text-overflow:ellipsis;">{{item.time}}</div>
-                </div>
-                <div class="coupon-btn" v-if="!item.over">立即使用</div>
-            </div>
-            <div class="cricle">
-            </div>
-            <div class="cricle2">
-            </div>
-        </div> -->
+        <div  v-if="showList.length===0" style="font-size:26px;margin-top:100px;display:flex;justify-content:center;align-items:center;flex-direction:column">
+            <div style="width:150px"><img src="../../../static/images/no_order.png" mode='widthFix'/></div>
+        </div>
     </div>
-
+    <div class="fixed-bottom" @click="goPage">
+        领取优惠券
+    </div>
   </div>
 </template>
 
@@ -80,6 +68,11 @@ export default {
         },
         sortRule(a,b) {
             return a.enable- b.enable;
+        },
+        goPage(){
+            wx.navigateTo({
+                url:'/pages/couponList/main'
+            })
         }
 
     },
@@ -91,24 +84,39 @@ export default {
             token:wx.getStorageSync('token')
         }
         wxRequest('mp/shop/api/user/coupon/list',{data}).then(res => {
-            console.log(res)
+            console.log(59,res)
+
             this.list = res.data.data;
-            this.list[0].enable = 1;
+
+            if(this.list === ''){
+                this.list = []
+            }else{
+                // this.list[0].enable = 1;
+            }
+            let date = new Date().getTime();//1587812391302  
             this.list.forEach(item => {
                 item.couponInfo.startTime = item.couponInfo.startTime.split(' ')[0].replace(/-/g,'.');
                 item.couponInfo.endTime = item.couponInfo.endTime.split(' ')[0].replace(/-/g,'.');
                 item.couponInfo.ruleNote = item.couponInfo.ruleNote.split(',');
-                if(item.enable === 0)
-                  enableNum++;
-                else
-                  noenableNum++;  
+                if(date<new Date(item.expireTime).getTime()) {
+                    console.log(new Date(item.expireTime).getTime())
+                    enableNum++;
+                    item.enable = 0;
+                }else{
+                    console.log(date)
+                    noenableNum++;  
+                    item.enable = 1;
+                }
+                // if(item.enable === 0)
+                //   enableNum++;
+                // else
+                //   noenableNum++;  
             })
             this.list.sort(this.sortRule);
             this.enableNum = `可用券（${enableNum}）`
             this.noenableNum = `无效券（${noenableNum}）`
             this.allNum = `全部（${this.list.length}）`
             this.showList = this.list;
-
         })
     },
 }
@@ -192,12 +200,12 @@ export default {
   }
   
   .coupon-right-left{
-      width: 70%;
+      width: calc(100% - 55px);
       overflow: hidden;
   }
   .coupon-btn{
-      width: 30%;
-      font-size: 13px;
+      width: 55px;
+      font-size: 12px;
       background: #ffd636;
       padding: 3px 4px;
       border-radius: 12px;
@@ -206,5 +214,17 @@ export default {
   }
   .over-color{
       color: #999;
+  }
+  .fixed-bottom{
+      width: 80%;
+      margin: 10px auto;
+      margin-top: 80px;
+      border-radius: 26px;
+      font-size: 18px;
+      height: 40px;
+        line-height: 40px;
+        text-align: center;
+        color: #333;
+        background: #ffd636;
   }
 </style>

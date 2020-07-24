@@ -14,7 +14,10 @@
     "pages/selCoupon/main",
     "pages/newAddress/main",
     "pages/cart/main",
+    "pages/compose/main",
     "pages/coupon/main",
+    "pages/couponList/main",
+    "pages/getCoupon/main",
     "pages/logistics/main",
     "pages/orders/main"
    ],

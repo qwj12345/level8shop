@@ -8,10 +8,10 @@
 
         <van-radio-group :value="id" @change="changeRadio" >
             <div class="coupon" v-for="(item,key) in list" :key='key'>
-                <div class="coupon-left"  v-if="item.couponInfo"><span style="font-size:12px;margin-top:-12px">￥</span><span style="font-size:32px;font-weight:bold">{{item.couponInfo.discount}}</span></div>
+                <div class="coupon-left"  v-if="item.couponInfo"><span :class="{'over-color':!item.couponInfo.isUser}" style="font-size:12px;margin-top:-12px">￥</span><span :class="{'over-color':!item.couponInfo.isUser}" style="font-size:32px;font-weight:bold">{{item.couponInfo.discount}}</span></div>
                 <div class="coupon-right" v-if="item.couponInfo">
                     <div class="coupon-right-left">
-                        <div style="font-size:14px;margin-bottom:4px;font-weight:bold">{{item.couponInfo.title}}</div>
+                        <div :class="{'over-color':!item.couponInfo.isUser}" style="font-size:14px;margin-bottom:4px;font-weight:bold">{{item.couponInfo.title}}</div>
                         <div class="coupon-rule-item" v-for="(rule,index) in item.couponInfo.ruleNote" :key="index">
                             <div class="coupon-cricle"></div>
                             <div>{{rule}}</div>
@@ -19,7 +19,7 @@
 
                         <div style="color:#bbb;font-size:10px;margin-top:10px;letter-spacing:0.5px;white-space: nowrap; overflow: hidden;text-overflow:ellipsis;">有效期{{item.couponInfo.startTime}}-{{item.couponInfo.endTime}}</div>
                     </div>
-                    <van-radio style="margin-left:10px" :name="key" checked-color='#FFd637'/>
+                    <van-radio v-if="item.couponInfo.isUser" style="margin-left:10px" :name="key" checked-color='#FFd637'/>
                 </div>
                 <div class="cricle">
                 </div>
@@ -27,6 +27,10 @@
                 </div>
             </div>
           </van-radio-group>
+          <!--  -->
+          <div style="font-size:26px;text-align:center;margin-top:30px" v-show="list.length===0">
+                优惠券为空
+            </div>
       </div>
      <div class="coupon-btn" @click="backPage(1)">
           立即使用
@@ -34,7 +38,6 @@
       <div class="coupon-btn2" @click="backPage(0)">
           不使用优惠券
       </div>
-
   </div>
 </template>
 
@@ -66,6 +69,7 @@ export default {
             var pages = getCurrentPages();   //当前页面
             var prevPage = pages[pages.length - 2];   //上一页面
             if(type === 0){
+                 prevPage.coupon = {}
                 wx.navigateBack({
                     //返回
                     delta: 1
@@ -84,28 +88,32 @@ export default {
                         duration:2000
                     })
                 }
-
             }
         }
     },
-    onShow(){
+
+    onLoad(query){
+        console.log(899,query.skuIds)
+        this.productPrice = query.price;
         let data = {
             token:wx.getStorageSync('token')
         }
         wxRequest('mp/shop/api/user/coupon/list',{data}).then(res => {
             console.log(res)
             this.list = res.data.data;
+            let date = new Date().getTime();
             this.list.forEach(item => {
+
                 item.couponInfo.startTime = item.couponInfo.startTime.split(' ')[0].replace(/-/g,'.');
                 item.couponInfo.endTime = item.couponInfo.endTime.split(' ')[0].replace(/-/g,'.');
                 item.couponInfo.ruleNote = item.couponInfo.ruleNote.split(',');
+                if((item.couponInfo.skuId===0 || query.skuIds.indexOf(item.couponInfo.skuId.toString())!==-1) && date<new Date(item.expireTime).getTime()){
+                    item.couponInfo.isUser = true;
+                }else{
+                    item.couponInfo.isUser = false;
+                }
             })
         })
-    },
-    onLoad(query){
-        console.log(query.price)
-        this.productPrice = query.price;
-        
     }
 }
 </script>
@@ -147,6 +155,9 @@ export default {
       position: relative;
       border-radius: 8px;
       overflow: hidden;
+  }
+  .over-color{
+      color: #999;
   }
   .coupon-left{
       height: 110px;

@@ -8,7 +8,8 @@
            {{status[orderDetail.status]}}
           </div>
 
-          <div  v-if="orderDetail.status === 0">距订单自动关闭剩 12:34</div>
+          <div  v-if="orderDetail.status === 0">距订单自动关闭剩 {{lastTime}}</div>
+          <div v-if="orderDetail.status === 300" style="padding:2px 6px;color:#666;font-size:12px;border:1px solid #666" @click="goPage('/pages/logistics/main?id='+orderDetail.id+'&company='+orderDetail.expressName)">查看物流</div>
       </div>
       <!--  -->
       <div class="user-location">
@@ -37,30 +38,52 @@
               </div>
           </div>
           <!--  -->
-          <div class="product-item border-bottom" v-for="(item,key) in orderDetail.productInfo" :key="key">
+          <div class="product-item border-bottom" v-for="(item,key) in orderDetail.productInfo" :key="key" @click="goPage('/pages/productDetail/main?id='+item.productId+'&sku='+item.id)">
               <div class="product-img">
                   <img :src="item.img" mode='widthFix'>
               </div>
               <div class="product-detail">
                   <div class="name-color"><span style="letter-spacing:1px;text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">{{item.productInfo.name}}</span>
-                  <span style="margin-top:6px;color:#999;font-size:12px;" v-for="(parma,index) in item.skuName" :key="index">{{parma}}</span>
+                    <span style="margin-top:6px;color:#999;font-size:12px;" v-for="(parma,index) in item.skuName" :key="index">{{parma}}</span>
                   </div>
                   <div style="display:flex;justify-content:space-between;font-size:13px">
-                      <div><span style="font-size:10px;">￥</span> {{item.price}}</div>
+                      <div  v-if="item.price!==0"><span style="font-size:10px;">￥</span> {{item.price}}</div>
+                      <div v-else><span style="font-size:10px;">￥</span> {{item.originalPrice}}</div>
                       <span style="color:#888">x {{item.quantity}}</span>
                     </div>
               </div>
           </div>
-
+        <div class="product-item border-bottom" v-for="(item,key) in orderDetail.giveawayProductList" :key="key">
+              <div class="product-img">
+                  <img :src="item.img" mode='widthFix'>
+              </div>
+              <div class="product-detail">
+                  <div class="name-color"><span style="letter-spacing:1px;text-overflow: ellipsis;white-space: nowrap;overflow: hidden;display:flex;align-items:center">{{item.productInfo.name}}<div style="color: #fff;width: 18px; height: 18px;  text-align: center; line-height: 18px;background: red;margin-left: 10px;font-size: 12px;">赠</div></span>
+                    <span style="margin-top:6px;color:#999;font-size:12px;" v-for="(parma,index) in item.skuName" :key="index">{{parma}}</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px">
+                      <span></span>
+                      <span style="color:#888">x {{item.quantity}}</span>
+                    </div>
+              </div>
+          </div>
           <!--  -->
           <div class="integrall border-bottom">
               <div class="integrall-icon">出发币</div>
-              <div class="integrall-text">确认该订单可获得 1890 出发币</div>
+              <div class="integrall-text">确认该订单可获得 {{integralNum}} 出发币</div>
           </div>
           <!--  -->
+          <div class="flex-center order-item border-bottom" v-if="orderDetail.groupProductInfo!==''&&orderDetail.groupProductInfo!==undefined">
+              <span style="color:#333">组合购优惠</span>
+              <div><span style="color:#999;font-size:10px">￥</span> {{orderDetail.spreadPrice}}</div>
+          </div>
           <div class="flex-center order-item border-bottom">
               <span style="color:#333">商品总价</span>
               <div><span style="color:#999;font-size:10px">￥</span> {{orderDetail.productFee}}</div>
+          </div>
+          <div class="flex-center order-item border-bottom">
+              <span style="color:#333">出发币抵扣</span>
+              <div><span style="color:#999;font-size:10px">￥</span> {{orderDetail.offsetIntegralNumFee}}</div>
           </div>
             <div class="flex-center order-item border-bottom">
               <span style="color:#333">运费</span>
@@ -70,7 +93,6 @@
               <span style="color:#333">付款</span>
               <div><span style="color:#999;font-size:10px">￥</span> {{orderDetail.totolFee}}</div>
           </div>
-
       </div>
         <div class="remark">
             <span>买家留言</span>
@@ -97,8 +119,10 @@ import {wxRequest} from '@/components/common'
 export default {
     data() {
         return {
-            status:{0:'待付款',100:'已取消',200:'待发货',},
-            orderDetail:{}
+            status:{0:'待付款',100:'已取消',200:'待发货',300:'已发货',400:'已收货',500:'已完成',600:'已取消',700:'待退款',800:'已退款'},
+            orderDetail:{},
+            lastTime:'',
+            integralNum:0
         }
     },
     methods: {
@@ -124,6 +148,9 @@ export default {
                         paySign: payInfo.paySign,
                         success (res) {
                             console.log(res)
+                            wx.redirectTo({
+                                url:'/pages/orders/main?index=0'
+                            })
                         },
                         fail (err) {
                             console.log(err)
@@ -156,6 +183,9 @@ export default {
                                 wx.showToast({
                                     title:'取消成功',
                                     duration:2000
+                                })
+                                wx.redirectTo({
+                                    url:'/pages/orders/main?index=0'
                                 })
                             }else{
                                 wx.showToast({
@@ -191,6 +221,11 @@ export default {
                 url:'/pages/index/main'
             })
         },
+        goPage(url){
+            wx.navigateTo({
+                url
+            })
+        },
         linkPhone(){
             wx.makePhoneCall({
                 phoneNumber:'4000088309'
@@ -198,9 +233,52 @@ export default {
         }
     },
     onLoad(query){
-        console.log(JSON.parse(query.detail))
+        this.integralNum = 0;
         this.orderDetail = JSON.parse(query.detail);
+        console.log(this.orderDetail)
+        this.orderDetail.expireTime = new Date(this.orderDetail.expireTime.replace(/-/g, "/"));
+        if(this.orderDetail.status === 0){
+            let now = null;
+            let minite = 0;
+            let second = 0;
+            let overTime = setInterval(()=>{
+                now = new Date();
+                minite = Math.floor((this.orderDetail.expireTime.getTime() - now.getTime()) / (1000*60));
+                second = Math.floor((this.orderDetail.expireTime.getTime() - now.getTime()) % (1000*60) / 1000);
+                if(minite === 0 && second === 0){
+                    this.orderDetail.status === 100;
+                    clearInterval(overTime);
+                }
+                if(minite<10)
+                    minite = '0'+minite;
+                if(second<10)
+                    second = '0'+second;
+                this.lastTime =  minite+ ':' + second; 
+            },1000)
+           
+        }
+        // let p = JSON.parse(JSON.stringify(item))
+        // 没有单个商品时需要定义个productInfo
+        if(this.orderDetail.productInfo===undefined||this.orderDetail.productInfo===""){
+            this.orderDetail.productInfo = [];
+        }
+        if(this.orderDetail.groupProductInfo!==undefined&&this.orderDetail.groupProductInfo!==""){ // 包含组合购时需要把组合购里的商品加在productInfo中
+            this.orderDetail.spreadPrice = 0;
+            this.orderDetail.groupProductInfo.forEach(group => {
+                this.orderDetail.spreadPrice += group.spreadPrice;// 计算组合购优惠
+                group.skus.forEach(val => {
+                    val.skuName = val.skuName.split(',');
+                    val.quantity = 1;
+                }) 
+                this.orderDetail.productInfo = this.orderDetail.productInfo.concat(group.skus)
+            })
+            this.orderDetail.spreadPrice = this.orderDetail.spreadPrice.toFixed(2);
+        }
+        
         this.orderDetail.locationInfo = JSON.parse(this.orderDetail.locationInfo);
+        this.orderDetail.productInfo.forEach(item => {
+            this.integralNum += item.integralNum * item.quantity;
+        })
     }
 }
 </script>

@@ -41,21 +41,25 @@
 			"currentL": -1,
 			"list": []
 		},
+		"gamePlugin": {
+			"current": -1,
+			"list": []
+		},
 		"miniprogram": {
 			"current": 0,
 			"list": [
 				{
 					"id": 0,
-					"name": "pages/address/main",
-					"pathName": "pages/address/main",
+					"name": "pages/cart/main",
+					"pathName": "pages/cart/main",
 					"query": "",
 					"scene": null
 				},
 				{
-					"id": -1,
+					"id": 1,
 					"name": "pages/productDetail/main",
-					"pathName": "pages/orders/main",
-					"query": "",
+					"pathName": "pages/productDetail/main",
+					"query": "id=100007",
 					"scene": null
 				}
 			]

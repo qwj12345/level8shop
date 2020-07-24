@@ -1,7 +1,7 @@
 {
-    "usingComponents": {
-
-      }
-
+  "usingComponents": {
+    "van-checkbox": "../../../static/vant/checkbox/index",
+    "van-popup": "../../../static/vant/popup/index"
+    }
     
 }

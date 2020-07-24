@@ -18,17 +18,33 @@
     <!--  -->
     <textarea v-model="evaluateContent" placeholder="评价超过15个字可获得出发币~"></textarea>
     <!--  -->
-    <div class="take-photo">
+    <div style="padding:12px;border-top:1px solid #ededed;display: flex;justify-content: center;background: #fff;" v-if="evaluateImgs.length!==0">
+        <div style="width:60px;height:60px;position:relative;padding:0 6px" v-for="(item,key) in evaluateImgs" :key="key">
+            <img style="width:100%;height:100%" :src="item"/>
+            <div class="close"  @click="removeImg(key)"><img src="../../../static/images/error.png"/></div>
+        </div>
+    </div>
+    <div class="take-photo" @click="uploadImg">
         <div class="photo"><img src="../../../static/images/photo.png" mode='widthFix'></div>
         <div>添加图片 / 视频</div>
     </div>
     <div class="rate-bottom">
         <div class="rate-btn" @click="submit">提交</div>
     </div>
+    <!-- 弹窗 -->
+    <div class="rate-modal" v-if="showModal">
+        <div class="modal-content">
+            <div class="icon">
+                <img src="../../../static/images/fly_icon.png" mode='widthFix'/>
+            </div>
+            <div style="font-size:14px;margin-top:20px;color：#333">提交成功，获得10个出发币</div>
+        </div>
+    </div>
   </div>
 </template>
 
 <script>
+import global from '@/components/global'
 import {wxRequest} from '@/components/common'
 export default {
     data() {
@@ -37,7 +53,8 @@ export default {
             orderId:'',
             evaluateScore:5,
             evaluateContent:'',
-            evaluateImgs:''
+            evaluateImgs:[],
+            showModal:false
         }
     },
     methods: {
@@ -47,7 +64,7 @@ export default {
                 orderId:this.orderId,
                 evaluateScore:this.evaluateScore,
                 evaluateContent:this.evaluateContent,
-                evaluateImgs:this.evaluateImgs
+                evaluateImgs:this.evaluateImgs.join(',')
             }
 
             wxRequest('mp/shop/api/user/order/evaluate',{data}).then(res => {
@@ -58,22 +75,72 @@ export default {
                         duration:2000
                     })
                     setTimeout(() => {
-                        wx.navigateBack({
-                            delta: 1
+                        wx.redirectTo({
+                            url:'/pages/orders/main?index=0'
                         })
-                    },2000)
+                    },1000)
    
+                }else{
+                    wx.showToast({
+                        title:res.data.msg,
+                        icon:'none',
+                        duration:2000
+                    })
                 }
             })
         },
         changeRate(e){
             this.evaluateScore = e.mp.detail / 5 * 100;
+        },
+        uploadImg(){
+            let that = this;
+
+            if(this.evaluateImgs.length < 5){
+                wx.chooseImage({
+                    count: 5, // 默认9
+                    sizeType: ['original', 'compressed'], // 可以指定是原图还是压缩图，默认二者都有
+                    sourceType: ['album', 'camera'], // 可以指定来源是相册还是相机，默认二者都有
+                    success: function (res) {
+                        res.tempFilePaths.forEach(item => {
+                            wx.uploadFile({
+                                url: global.ip1+'file/mall/upload', 
+                                filePath: item, 
+                                name: 'file',
+                                formData:{
+                                    'token':wx.getStorageSync('token'),
+                                    'platform':'mini'
+                                },
+                                header: {
+                                'Content-Type': 'multipart/form-data' // 默认值
+                                },
+                                success (res1){
+                                    console.log(JSON.parse(res1.data).url)
+                                    that.evaluateImgs.push(JSON.parse(res1.data).url);
+                                },
+                                fail(err){
+                                    console.log(err)
+                                }
+                            })
+                        })
+
+                    }
+                })
+            }else{
+                wx.showToast({
+                    title:'超过了上传限制',
+                    icon:'none'
+                })
+            }
+            
+        },
+        removeImg(index){
+            this.evaluateImgs.splice(index,1)
         }
     },
     onLoad(query){
         this.evaluateScore = 5;
         this.evaluateContent = '';
-        this.evaluateImgs = '';
+        this.evaluateImgs = [];
         console.log(JSON.parse(query.product))
         this.orderId = JSON.parse(query.product).id;
         this.ptoductList = JSON.parse(query.product).productInfo;
@@ -85,6 +152,49 @@ export default {
   @import url('../../components/common.css');
   page{
     background: rgb(247, 248, 248);
+  }
+  .close{
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      width: 14px;
+      height: 14px;
+  }
+  .rate-modal{
+      background: rgba(000, 000, 000, 0.3);
+      position: fixed;
+      top: 0px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 100vh;
+      width: 100vw;
+  }
+  .modal-content{
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+      background: rgb(255,215,54);
+      width: 80%;
+      padding: 50px 0;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+  }
+  .modal-content .icon{
+      width: 40%;
+      background: #fff;
+      border-radius: 50%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10%; 
+    box-sizing: border-box;
+
   }
   .products{
       display: flex;

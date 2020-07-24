@@ -1,6 +1,6 @@
 <template>
   <div>
-        <van-radio-group :value="id" @change="changeRadio">
+        <van-radio-group :value="ids" @change="changeRadio">
             <van-radio custom-class="address-item" icon-class='icon' checked-color='#000' v-for="(item,key) in addresses" :key="key" :name="item.id" @click="backPage(item)">
                 <div class="flex-center address-item-content">
                     <div style="width:calc(100% - 60px);border-right:1px solid #333;padding-right:16px;box-sizing:border-box">
@@ -21,11 +21,16 @@
             </van-radio>
 
         </van-radio-group>
+          <!--  -->
+          <div style="font-size:26px;text-align:center;margin-top:50px" v-show="addresses.length===0">
+                收货地址为空
+            </div>
         <!--  -->
         <div class="address-btns">
             <div class="address-btn add-btn" @click="addItem">+ 新建收货地址</div>
             <div class="address-btn report-btn" @click="chooseAddress">一键导入微信地址</div>
         </div>
+
   </div>
 </template>
 
@@ -34,7 +39,7 @@ import {wxRequest} from '@/components/common'
 export default {
     data() {
         return {
-            id:'1',
+            ids:'',
             addresses:[],
             type:0
         }
@@ -55,10 +60,10 @@ export default {
 
         },
         changeRadio(e){
-            this.id = e.mp.detail;
+            this.ids = e.mp.detail;
+            console.log(e.mp.detail)
         },
         goEdit(item){
-
                wx.navigateTo({
                     url:'/pages/newAddress/main?address='+JSON.stringify(item)
                 }) 
@@ -70,43 +75,74 @@ export default {
                 }) 
         },
         delAddress(id){
-            this.addresses.splice(id,1)
-            let data = {
-                token:wx.getStorageSync('token'),
-                locationId:id
-            }
+            let that = this;
+             wx.showModal({
+                title: '删除',
+                content: '是否确认删除？',
+                success(res){
+                    if(res.cancel){
+                        
+                    }else if(res.confirm){
+                        that.addresses.splice(id,1)
+                        let data = {
+                            token:wx.getStorageSync('token'),
+                            locationId:id
+                        }
 
-            wxRequest('/mp/shop/api/user/location/del',{data}).then(res => {
-                console.log(res)
-                if(res.data.code === 0){
-                    wx.showToast({
-                        title: '删除成功',
-                        icon: 'success',
-                        duration: 2000
-                    })
-                    this.getList();
-                }else{
-                    wx.showToast({
-                        title: '删除失败',
-                        icon:'none',
-                        duration: 2000
-                    })
+                        wxRequest('/mp/shop/api/user/location/del',{data}).then(res => {
+                            console.log(res)
+                            if(res.data.code === 0){
+                                wx.showToast({
+                                    title: '删除成功',
+                                    icon: 'success',
+                                    duration: 2000
+                                })
+                                that.getList();
+                            }else{
+                                wx.showToast({
+                                    title: '删除失败',
+                                    icon:'none',
+                                    duration: 2000
+                                })
+                            }
+
+                        })
+                    }
                 }
-
             })
+
         },
         chooseAddress(){
             
             wx.chooseAddress({
                 success (res) {
-                    console.log(res.userName)
-                    console.log(res.postalCode)
-                    console.log(res.provinceName)
-                    console.log(res.cityName)
                     console.log(res.countyName)
-                    console.log(res.detailInfo)
-                    console.log(res.nationalCode)
-                    console.log(res.telNumber)
+
+                    let data = {
+                        token:wx.getStorageSync('token'),
+                        districtName:res.countyName,
+                        address:res.detailInfo,
+                        userPhone:res.telNumber,
+                        userName:res.userName,
+                        isDefault:0
+                    }
+                    console.log(data)
+                    wxRequest('/mp/shop/api/user/location/add',{data}).then(res => {
+                        console.log(963,res)
+                        if(res.data.code === 0){
+                            wx.showToast({
+                                title: '添加成功',
+                                duration: 2000
+                            })
+                            // this.getList();
+                        }else{
+                            wx.showToast({
+                                title: '添加失败',
+                                icon:'none',
+                                duration: 2000
+                            })
+                        }
+                    })
                 }
             })
         },
@@ -122,17 +158,19 @@ export default {
                     this.addresses = res.data.data;
                     this.addresses.forEach((item,key) => {
                         if(item.isDefault === 1){
-                            this.id = item.id.toString();
+                            this.ids = item.id.toString();
+                            console.log('id',this.ids)
                             index = key;
                             return;
                         }
                     })
                     let address = this.addresses.splice(index,1);
                     this.addresses.splice(0,0,address[0])
+                }else{
+                    this.addresses=[];
                 }
                 console.log(999,this.addresses)
                 // this.addresses.unshift(address[0])
-
 
             })
         }

@@ -1,13 +1,13 @@
 <template>
   <div>
-    <header1 @openMenu='getOpen' :cartNum='cartNum' :isProducts="isFilter" @getSortId='getSort' @getGoods='getKeyWord' @getType='getType'></header1>
+    <header1 @openMenu='getOpen'  @getModal='getCartModal' :hasAgree='hasAgree' @getModal2='getCartModal2' :cartNum='cartNum' :isProducts="isFilter" @getSortId='getSort' @getGoods='getKeyWord' @getType='getType'></header1>
     <div :class="{'overNoS product-list':menuOpen,'product-list':!menuOpen}">
 
         <div class="product-item" v-for="(item,key) in products" :key="key" @click="goPage(item)">
           <div class="product-img">
             <img :src="item.mainPicUrl" mode='widthFix'/>
           </div>
-          <div style="height:70px;display:flex;flex-direction:column;justify-content:space-between;padding-top:10px;padding-bottom:10px">
+          <div style="height:45px;display:flex;flex-direction:column;justify-content:space-between;padding-top:10px;">
             <div class="product-name">
               {{item.name}}
             </div>
@@ -23,15 +23,38 @@
           </div>
         </div>
     </div>
+    <!--  -->
+    <modal1 :showModal="showModal" @modalShow='getModal' @refuseModal='refuseAgree'></modal1>
+    <!-- 授权弹出框 -->
+    <van-popup :show="showModal2" custom-class="popup-class" >
+        <div class="modal2">
+          <div class="reg-title">
+            获取微信授权信息
+          </div>
+          <div class="reg-text">
+              微信登录需要获取您的用户信息，请前往授权
+          </div>
+          <div class="modal-btns">
+            <div class="modal-cancel-btn" @click="hideModal">
+              取消
+            </div>
+            <button class="reg-btn" open-type="getUserInfo" @getuserinfo="getUserInfo" @click="hideModal">授权登录</button>
+          </div>
+        </div>
+    </van-popup>
   </div>
 </template>
 
 <script>
 import header1 from '@/components/header';
-import {wxRequest} from '@/components/common'
+import {wxRequest,getCartNum} from '@/components/common';
+import modal1 from '@/components/modal'
+var mta= require('@/utils/mta_analysis.js')
 export default {
     data(){
         return{
+          showModal2:false,
+          showModal:false,
           sort:2,
           keyword:'',
           categoryId:0,
@@ -40,16 +63,42 @@ export default {
           isFilter:true,
           cartNum:0,
           page:0,
-          lastPage:false
+          lastPage:false,
+          hasAgree:false
         }
     },
     
     components:{
-      header1
+      header1,
+      modal1
     },
     methods: {
+        getUserInfo(e){
+          if (e.mp.detail.rawData){
+            let rawData =  JSON.parse(e.mp.detail.rawData)
+            this.showModal = true; 
+            this.hasAgree = true;
+            getApp().globalData.login = 1; //保存用户登录状态
+          console.log(this.showModal)
+          } else {  
+            this.showModal2 = true;
+            console.log('用户按了拒绝按钮')
+          }
+        },
+        // modal组件中的值传过来
+        getModal(e){
+          this.showModal = e.showModal;
+        },
+        getCartModal(e){
+          this.showModal =e;
+        },
+        getCartModal2(e){
+            this.showModal2 =e;
+        },
+        hideModal(){
+        this.showModal2 = false;
+      },
         goPage(item){
-   
             wx.navigateTo({
               url:'/pages/productDetail/main?id='+item.id
             })
@@ -85,15 +134,15 @@ export default {
             let data = {
               categoryId:this.categoryId,
               page:this.page,
-              size:6,
+              size:10,
               sortType:this.sort,
               keyword:this.keyword
             }
             console.log(data)
             wxRequest('/mp/shop/api//product/query',{data}).then(res => {
+              console.log('product',res)
               that.products = that.products.concat(res.data.data.content);
-              console.log(res.data)
-              this.lastPage = res.data.data.lastPage;
+              this.lastPage = res.data.data.last;
               wx.hideLoading();
             })
           }else{
@@ -109,39 +158,68 @@ export default {
           this.lastPage = false;
           this.products = [];
           this.categoryId = e;
+       
           this.getProducts()
         }
     },
     onReachBottom(){
       this.page++;
-      console.log(this.page)
       this.getProducts();
     },
+    
+    onLoad(){
+       mta.Page.init({
+          "appID":"500717591",
+          "autoReport": true,
+          "statParam": true,
+          "ignoreParams": [],
+          "autoReport": true, //开启自动上报
+          "statParam": true, //每个页面均加入参数上报
+      });
+      // 判断用户是否登录，如果是就根据hasAgree字段判断显示用户头像和昵称，并且隐藏modal
+      if(getApp().globalData.login === 1){
+          this.hasAgree = true;
+          this.showModal2 = false;
+        }
+        if(getApp().globalData.phone === 1){
+          this.showModal = false;        
+        }
+        if(getApp().globalData.keyword===undefined && getApp().globalData.type===undefined ){
+          this.products = [];
+          this.page=0;
+          this.lastPage = false;
+          this.getProducts();
+        }
+
+    },
+
     onShow(){
+      
       if(getApp().globalData.keyword!==undefined){
         this.keyword = getApp().globalData.keyword;
-        getApp().globalData.keyword = undefined;
       }
       if(getApp().globalData.type!==undefined){
         console.log(getApp().globalData.type)
         this.categoryId = getApp().globalData.type;
-        getApp().globalData.type = undefined;
       }
-      this.products = [];
-      this.page=0;
-      this.lastPage = false;
-      this.getProducts();
+
+      if(getApp().globalData.keyword!==undefined || getApp().globalData.type!==undefined ){
+        this.products = [];
+        this.page=0;
+        this.lastPage = false;
+        this.getProducts();
+      }
+        getApp().globalData.type = undefined;
+        getApp().globalData.keyword = undefined;
+
       setTimeout(() => {
           // 获取购物车中商品数量
-          let datacart = {
-              token:wx.getStorageSync('token')
+   
+          if(wx.getStorageSync('token')!==''){
+            getCartNum().then(res => {
+              this.cartNum = res;
+            })
           }
-          wxRequest('/mp/shop/api/shopcart/query',{data:datacart}).then(res => {
-              this.cartNum = 0;
-              res.data.data.forEach(item => {
-                this.cartNum+=item.quantity
-              })
-          })
         }, 1000);
     }
 }
@@ -161,7 +239,7 @@ export default {
   }
   .product-item{
     width: 48.5%;
-    height: calc((100vw - 24px) * 0.485 + 90px);
+    height: calc((100vw - 24px) * 0.485 + 70px);
     background: #fff;
     color: #333;
     padding-bottom: 10px;
@@ -177,7 +255,7 @@ export default {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     padding: 0px 10px;
-
+    text-align: center;
   }
   .product-img{
     background: #fff;

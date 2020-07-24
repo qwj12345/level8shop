@@ -1,7 +1,20 @@
 <script>
 import global from '@/components/global'
 import {getToken,saveUser,wxRequest} from '@/components/common'
+var mta= require('./utils/mta_analysis.js')
+
 export default {
+  onLaunch(){
+    console.log(455,mta)
+    mta.App.init({
+          "appID":"500717591",
+          "autoReport": true,
+          "statParam": true,
+          "ignoreParams": [],
+          "autoReport": true, //开启自动上报
+          "statParam": true, //每个页面均加入参数上报
+      });
+  },
   created () {
     // 调用API从本地缓存中获取数据
     /*
@@ -11,7 +24,7 @@ export default {
      * 百度：mpvue === swan, mpvuePlatform === 'swan'
      * 支付宝(蚂蚁)：mpvue === my, mpvuePlatform === 'my'
      */
-
+    
     let logs
     if (mpvuePlatform === 'my') {
       logs = mpvue.getStorageSync({key: 'logs'}).data || []

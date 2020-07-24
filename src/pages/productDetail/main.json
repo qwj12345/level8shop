@@ -1,5 +1,7 @@
 {
     "usingComponents": {
-        "van-rate": "../../../static/vant/rate/index"
+        "van-rate": "../../../static/vant/rate/index",
+        "van-checkbox": "../../../static/vant/checkbox/index",
+        "van-popup": "../../../static/vant/popup/index"
       }
 }

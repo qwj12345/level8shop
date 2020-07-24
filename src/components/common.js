@@ -46,7 +46,7 @@ export function getToken(encryptedData,iv){
 export function saveUser(nickName,avatarUrl,sex){
     // -----------------传头像和名字------------------
     wx.request({
-        url: global.ip1+'miniProgram/api/user/basic/add/', //仅为示例，并非真实的接口地址
+        url: global.ip1+'miniProgram/api/shop/userBasic/add', //仅为示例，并非真实的接口地址
         data: {
         userName: nickName,
         userImg: avatarUrl,
@@ -57,7 +57,7 @@ export function saveUser(nickName,avatarUrl,sex){
         'content-type': 'application/json' // 默认值
         },
         success (res) {
-           
+           console.log('user',res)
             getApp().globalData.integralNum = res.data.integralNum;
         }
     })
@@ -87,3 +87,45 @@ export function wxRequest(url,config){
         })
     })
 }
+//Promise方式实现异步
+// export function getCartNum(){
+//     return new Promise(function(resolve,reject){
+//         // 获取购物车中商品数量
+//         let datacart = {
+//             token:wx.getStorageSync('token')
+//         }
+
+//         wxRequest('/mp/shop/api/shopcart/query',{data:datacart}).then(res => {
+//         console.log(res.data)
+//             let cartNum = 0;
+//             res.data.data.forEach(item => {
+//                 cartNum+=item.quantity
+//             })
+//             resolve(cartNum)
+//         })
+//     })
+
+//   }
+ 
+//async await方式实现异步 
+export async function getCartNum(){
+    
+        // 获取购物车中商品数量
+        let datacart = {
+            token:wx.getStorageSync('token')
+        }
+        let cartNum = 0;
+        await wxRequest('/mp/shop/api/shopcart/query',{data:datacart}).then(res => {
+            console.log(res.data)
+            res.data.data.forEach(item => {
+                if(item.shopGroupSale!==undefined){
+                    cartNum += (item.shopGroupSale.skus.length) * item.quantity;
+                }else if(item.sku !== undefined){
+                    cartNum+=item.quantity;
+                }
+            })
+            
+        })
+        return cartNum;
+
+  }
